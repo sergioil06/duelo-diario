@@ -128,7 +128,7 @@ describe("misiones del día", () => {
     const s = missionsForDay([base], [{ missionId: "m1", userId: "a", date: "2026-11-17", status: "approved" }], "a", today);
     expect(s[0].today).toBeNull();
     expect(canComplete(s[0])).toBe(true);
-    const wd = { ...base, frequency: { type: "weekdays", days: [1, 3] } as const };
+    const wd: MissionDef = { ...base, frequency: { type: "weekdays", days: [1, 3] } };
     const s2 = missionsForDay([wd], [{ missionId: "m1", userId: "a", date: "2026-11-16", status: "approved" }], "a", today);
     expect(canComplete(s2[0])).toBe(true);
   });
