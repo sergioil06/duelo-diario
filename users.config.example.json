@@ -1,0 +1,6 @@
+{
+  "users": [
+    { "id": "sergio", "username": "sergio", "displayName": "Sergio", "password": "cambia-esto-123", "role": "admin" },
+    { "id": "pareja", "username": "pareja", "displayName": "Pareja", "password": "cambia-esto-456", "role": "member" }
+  ]
+}

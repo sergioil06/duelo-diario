@@ -1,26 +1,146 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Paleta "Pop Caramelo". Los colores de jugador se distinguen también por luminosidad. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f4f1ff;
+  --surface: #ffffff;
+  --surface-2: #f0ecff;
+  --ink: #1e1b3a;
+  --muted: #5b5677;
+  --line: #e4ddff;
+  --primary: #6d4aff;
+  --primary-press: #4b2fd6;
+  --primary-ink: #ffffff;
+  --me: #1d4ed8;
+  --me-fill: #2563eb;
+  --rival: #c2410c;
+  --rival-fill: #f97316;
+  --gold: #ffb020;
+  --flame: #ff6b2c;
+  --ok: #16a34a;
+  --ok-soft: #dcfce7;
+  --ok-ink: #166534;
+  --warn-soft: #fff4db;
+  --warn-ink: #6b4a00;
+  --danger: #dc2626;
+  --shadow: #e4ddff;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #15122b;
+  --surface: #221d40;
+  --surface-2: #2e2852;
+  --ink: #f5f3ff;
+  --muted: #b4add6;
+  --line: #2e2852;
+  --primary: #6d4aff;
+  --primary-press: #3a22a8;
+  --primary-ink: #ffffff;
+  --me: #7ab0ff;
+  --me-fill: #3b82f6;
+  --rival: #ffa866;
+  --rival-fill: #f97316;
+  --ok: #22c55e;
+  --ok-soft: #14532d;
+  --ok-ink: #bbf7d0;
+  --warn-soft: #4a3a10;
+  --warn-ink: #ffe3a3;
+  --danger: #f87171;
+  --shadow: #0b0918;
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-primary: var(--primary);
+  --color-primary-press: var(--primary-press);
+  --color-primary-ink: var(--primary-ink);
+  --color-me: var(--me);
+  --color-me-fill: var(--me-fill);
+  --color-rival: var(--rival);
+  --color-rival-fill: var(--rival-fill);
+  --color-gold: var(--gold);
+  --color-flame: var(--flame);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-ok-ink: var(--ok-ink);
+  --color-warn-soft: var(--warn-soft);
+  --color-warn-ink: var(--warn-ink);
+  --color-danger: var(--danger);
+  --color-shadow: var(--shadow);
+  --font-sans: var(--font-nunito), system-ui, sans-serif;
+  --font-display: var(--font-baloo), var(--font-nunito), system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--bg);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Botón "pulsable": sombra sólida debajo que desaparece al pulsar. */
+.press {
+  box-shadow: 0 5px 0 var(--press-shadow, var(--shadow));
+  transition: transform 90ms ease, box-shadow 90ms ease;
+}
+.press:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 var(--press-shadow, var(--shadow));
+}
+
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Animaciones del avatar */
+@keyframes avatar-idle {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(-3px) scaleY(1.015); }
+}
+@keyframes avatar-jump {
+  0% { transform: translateY(0) scale(1); }
+  20% { transform: translateY(2px) scale(1.06, 0.92); }
+  45% { transform: translateY(-22px) scale(0.95, 1.06) rotate(-4deg); }
+  70% { transform: translateY(0) scale(1.04, 0.96) rotate(2deg); }
+  100% { transform: translateY(0) scale(1); }
+}
+@keyframes avatar-sad {
+  0%, 100% { transform: rotate(0); }
+  50% { transform: rotate(-3deg) translateY(2px); }
+}
+.avatar-idle { animation: avatar-idle 2.6s ease-in-out infinite; transform-origin: 50% 100%; }
+.avatar-happy { animation: avatar-jump 0.9s cubic-bezier(.3,.7,.4,1) 2; transform-origin: 50% 100%; }
+.avatar-sad { animation: avatar-sad 3s ease-in-out infinite; transform-origin: 50% 100%; }
+
+@keyframes pop-in {
+  0% { transform: scale(.6); opacity: 0; }
+  60% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.pop-in { animation: pop-in 380ms cubic-bezier(.3,.7,.4,1.4) both; }
+
+@keyframes float-up {
+  0% { transform: translate(-50%, 0); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translate(-50%, -56px); opacity: 0; }
+}
+.float-up { animation: float-up 1.1s ease-out forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar-idle, .avatar-happy, .avatar-sad, .pop-in, .float-up { animation: none; }
+  .press { transition: none; }
 }
