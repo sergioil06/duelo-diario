@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sin conexión · Duelo diario</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; min-height: 100dvh; display: grid; place-items: center; font-family: system-ui, sans-serif; background: #f4f1ff; color: #1e1b3a; text-align: center; padding: 24px; box-sizing: border-box; }
+  @media (prefers-color-scheme: dark) { body { background: #15122b; color: #f5f3ff; } }
+  img { width: 96px; height: 96px; }
+  button { margin-top: 16px; min-height: 48px; padding: 0 24px; border: 0; border-radius: 16px; background: #6d4aff; color: #fff; font-weight: 800; font-size: 16px; }
+</style>
+</head>
+<body>
+  <main>
+    <img src="/icons/icon-192.png" alt="">
+    <h1>Sin conexión</h1>
+    <p>Necesitas internet para ver el marcador. Vuelve a intentarlo en cuanto tengas red.</p>
+    <button onclick="location.reload()">Reintentar</button>
+  </main>
+</body>
+</html>

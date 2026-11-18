@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Baloo_2, Nunito } from "next/font/google";
 import "./globals.css";
+import { RegisterSW } from "@/components/RegisterSW";
 
 const baloo = Baloo_2({ variable: "--font-baloo", subsets: ["latin"], weight: ["600", "700", "800"] });
 const nunito = Nunito({ variable: "--font-nunito", subsets: ["latin"], weight: ["500", "700", "800"] });
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
   description: "Nuestra competición de misiones diarias",
   applicationName: "Duelo diario",
   appleWebApp: { capable: true, title: "Duelo", statusBarStyle: "default" },
+  icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
   robots: { index: false, follow: false },
 };
 
@@ -32,7 +34,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className={`${baloo.variable} ${nunito.variable} antialiased`}>{children}</body>
+      <body className={`${baloo.variable} ${nunito.variable} antialiased`}>
+        {children}
+        <RegisterSW />
+      </body>
     </html>
   );
 }

@@ -7,6 +7,7 @@ import { canComplete, missionsForDay, type MissionDef } from "@/lib/domain/missi
 import { awardFor, rankingPoints, coinBalance, type LedgerCompletion } from "@/lib/domain/points";
 import { currentStreak, nextTier, streakMultiplier } from "@/lib/domain/streak";
 import { getAvatar } from "@/lib/shop-server";
+import { onCompleted } from "@/lib/events";
 
 const { users, missions, completions, stepLogs, settings, purchases } = schema;
 
@@ -171,7 +172,7 @@ export async function completeMission(me: User, missionId: string, now = new Dat
     .values(values)
     .onConflictDoUpdate({ target: [completions.missionId, completions.userId, completions.date], set: values })
     .returning();
-  return { completion: row, award, status, streak: streakAfter };
+  return { completion: row, award, status, streak: streakAfter, title: m.title };
 }
 
 /** Deshacer el completado de hoy (por si le diste sin querer). */
@@ -193,6 +194,8 @@ export async function validateCompletion(me: User, completionId: string, approve
     .update(completions)
     .set({ status: approve ? "approved" : "rejected", validatedBy: me.id })
     .where(eq(completions.id, completionId));
+  const [m] = await db.select({ title: missions.title }).from(missions).where(eq(missions.id, c.missionId));
+  return { userId: c.userId, points: c.points, title: m?.title ?? "una misión" };
 }
 
 /** Registra pasos del día y completa las misiones de pasos cuyo objetivo se alcance. */
@@ -215,8 +218,9 @@ export async function logSteps(me: User, steps: number, source = "manual", now =
   for (const m of stepMissions) {
     if (m.target === null || steps < m.target) continue;
     try {
-      await completeMission(me, m.id, now, { source: "steps" });
+      const r = await completeMission(me, m.id, now, { source: "steps" });
       completed.push(m.title);
+      onCompleted(me, r.title, r.award.points, r.status === "pending");
     } catch (e) {
       if (!(e instanceof GameError)) throw e;
     }

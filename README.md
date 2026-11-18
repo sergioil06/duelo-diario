@@ -12,7 +12,7 @@ Stack: Next.js 15 (App Router) + TypeScript + Tailwind 4 + Drizzle ORM sobre Pos
 | 2 | Login, misiones, puntos, rachas, validación, pasos manuales | Hecha |
 | 3 | Clasificación, ganador semanal, apuesta por semana, 24 logros, estadísticas | Hecha |
 | 4 | Avatar 3D personalizable, tienda con 32 objetos y rarezas, vestidor | Hecha |
-| 5 | Pulido, notificaciones push, PWA instalable, despliegue | Pendiente |
+| 5 | Pulido, notificaciones push, PWA instalable, pasos por Atajo, despliegue | Hecha |
 
 ## Arrancar en local
 
@@ -63,26 +63,66 @@ Para probar con datos inventados en local: `npm run demo` (se niega a correr si 
 - Comprar gasta monedas, nunca puntos de ranking. El catálogo está en `src/lib/domain/shop.ts`: para añadir un objeto basta con una línea nueva.
 - Si un móvil no tiene WebGL, se muestra el muñeco 2D.
 
-## Pasos (Apple Health / Google Fit)
+## Pasos (Apple Health)
 
-Ahora se apuntan a mano desde la tarjeta de pasos. Una web no puede leer Apple Health directamente, así que en la fase 5 se añadirá el endpoint `/api/steps` con un token por persona para que un Atajo de iOS envíe los pasos automáticamente. La API de Google Fit está cerrándose, así que en Android seguirán siendo manuales.
+Se pueden apuntar a mano desde la tarjeta de pasos, o enviarlos solos cada noche con un Atajo de iOS:
+
+1. En la app, **Ajustes → Pasos automáticos** te da la dirección (`https://tu-app/api/steps`) y tu token personal.
+2. En el iPhone: Atajos → Automatización → Hora del día (por ejemplo 23:30, diariamente, sin preguntar).
+3. Acciones: «Buscar muestras de salud» (Pasos, desde hoy) → «Calcular estadísticas» (suma) → «Obtener contenido de URL» con método POST, cabecera `Authorization: Bearer <token>` y cuerpo JSON `{"steps": <suma>}`.
+
+El endpoint acepta también el número como texto ("10.450" o "10450,0"). Si el token se filtra, genera otro en Ajustes y el viejo deja de valer. En Android no hay forma fiable de leer los pasos desde una web (la API de Google Fit se está cerrando), así que allí siguen siendo manuales.
+
+## Notificaciones
+
+- **Recordatorios** a las horas que elija cada persona (09, 13, 18, 20 o 22 h, hora de Madrid) si le quedan misiones, con un texto que pica según el marcador y la racha.
+- **Avisos de la pareja**: cuando la otra persona suma puntos (se puede apagar) y cuando pide que valides una misión (siempre).
+- Se activan en cada móvil desde **Ajustes → Avisos**. En iPhone solo funcionan con la app instalada en la pantalla de inicio (iOS 16.4 o superior).
+
+Para que funcionen hacen falta estas variables (mira `.env.example`):
+
+```bash
+npx web-push generate-vapid-keys   # da la clave pública y la privada
+openssl rand -hex 32               # para CRON_SECRET
+```
+
+Los recordatorios los dispara un cron que llama a `POST /api/cron/reminders` con `Authorization: Bearer $CRON_SECRET`:
+
+- **GitHub Actions** (`.github/workflows/reminders.yml`, recomendado): se ejecuta cada hora. Añade en el repo los secretos `APP_URL` (por ejemplo `https://duelo.vercel.app`) y `CRON_SECRET`. GitHub puede retrasarlo unos minutos.
+- **Vercel Cron** (`vercel.json`): el plan gratuito solo permite uno al día; está a las 19:00 UTC, que son las 20:00 en invierno y las 21:00 en verano. Sirve de respaldo si no usas GitHub Actions.
+
+## Instalar como app
+
+- **iPhone (Safari):** Compartir → «Añadir a pantalla de inicio».
+- **Android (Chrome):** menú ⋮ → «Instalar aplicación», o el botón de **Ajustes → Instalar la app**.
+
+Sin conexión se muestra una pantalla de aviso en vez de un error.
 
 ## Tiempo real
 
-La pantalla Hoy se refresca cada 5 segundos mientras está visible y al volver a la app, así que los puntos de la pareja aparecen casi al momento. En la fase 5 se puede cambiar a Supabase Realtime.
+La pantalla Hoy se refresca cada 5 segundos mientras está visible y al volver a la app, así que los puntos de la pareja aparecen casi al momento. Para dos personas es suficiente y no necesita configurar nada más; además llega un aviso push cuando la pareja suma.
 
 ## Tests
 
 ```bash
-npm test          # lógica de fechas, rachas, puntos, monedas y misiones
+npm test          # lógica de fechas, rachas, puntos, monedas, misiones, ranking, tienda y avisos
 npm run typecheck
 npm run lint
 ```
 
+GitHub Actions ejecuta el typecheck y los tests en cada push y PR (`.github/workflows/ci.yml`).
+
 ## Desplegar (Vercel + Supabase, gratis)
 
-1. Crea un proyecto en Supabase y copia la cadena de conexión del *Transaction pooler* (puerto 6543).
-2. Importa el repo en Vercel y añade las variables `DATABASE_URL` y `SESSION_SECRET` (mira `.env.example`).
-3. Las migraciones de `drizzle/` se aplican solas al arrancar. Desde tu ordenador, crea las cuentas contra esa base de datos: `DATABASE_URL=... npm run users`.
+1. **Supabase:** crea un proyecto (región Europa, por ejemplo Frankfurt). En *Connect → Transaction pooler* copia la cadena de conexión (puerto 6543) y pon tu contraseña de la base de datos.
+2. **Vercel:** *Add New → Project*, importa `duelo-diario` y añade en *Environment Variables*:
+   - `DATABASE_URL`: la cadena de Supabase.
+   - `SESSION_SECRET`: `openssl rand -base64 48`.
+   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (por ejemplo `mailto:tu-correo`).
+   - `CRON_SECRET`.
+   Despliega. Las migraciones de `drizzle/` se aplican solas la primera vez que arranca.
+3. **Cuentas:** desde tu ordenador, con `users.config.json` relleno: `DATABASE_URL="postgres://..." npm run users`. Crea las dos cuentas y las misiones de ejemplo.
+4. **Recordatorios:** en GitHub, *Settings → Secrets and variables → Actions*, añade `APP_URL` y `CRON_SECRET`.
+5. Abrid la URL en los dos móviles, instaladla, entrad y activad los avisos en Ajustes.
 
-Más detalle en la fase 5.
+Si cambias la clave VAPID, cada móvil tiene que volver a activar los avisos.

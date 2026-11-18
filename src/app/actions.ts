@@ -10,6 +10,9 @@ import { getDb, schema } from "@/lib/db";
 import { completeMission, GameError, logSteps, setSetting, undoMission, validateCompletion } from "@/lib/game";
 import { ICON_KEYS } from "@/lib/icons";
 import { buyItem, equipItem, updateAppearance } from "@/lib/shop-server";
+import { onCompleted, onValidated } from "@/lib/events";
+import { getPrefs, removeSubscription, savePrefs, saveSubscription, sendToUser } from "@/lib/push";
+import { randomBytes } from "node:crypto";
 import { localDate, weekStart } from "@/lib/domain/dates";
 
 type Result<T = unknown> = { ok: true; data: T } | { ok: false; error: string };
@@ -64,6 +67,7 @@ export async function completeAction(missionId: string) {
   const me = await requireUser();
   return wrap(async () => {
     const r = await completeMission(me, z.string().uuid().parse(missionId));
+    onCompleted(me, r.title, r.award.points, r.status === "pending");
     return { points: r.award.points, multiplier: r.award.multiplier, pending: r.status === "pending" };
   });
 }
@@ -75,7 +79,10 @@ export async function undoAction(missionId: string) {
 
 export async function validateAction(completionId: string, approve: boolean) {
   const me = await requireUser();
-  return wrap(() => validateCompletion(me, z.string().uuid().parse(completionId), approve));
+  return wrap(async () => {
+    const r = await validateCompletion(me, z.string().uuid().parse(completionId), approve);
+    onValidated(me, r.userId, r.title, r.points, approve);
+  });
 }
 
 export async function stepsAction(steps: number) {
@@ -233,4 +240,50 @@ export async function equipAction(slot: string, itemId: string | null) {
 export async function appearanceAction(input: Record<string, string>) {
   const me = await requireUser();
   return wrap(() => updateAppearance(me, z.record(z.string(), z.string().max(40)).parse(input)));
+}
+
+/* ---------- Notificaciones ---------- */
+
+const SubscriptionInput = z.object({
+  endpoint: z.string().url().max(1000).refine((u) => u.startsWith("https://"), "La suscripción debe ser https"),
+  keys: z.object({ p256dh: z.string().max(200), auth: z.string().max(100) }),
+});
+
+export async function subscribePushAction(sub: unknown) {
+  const me = await requireUser();
+  return wrap(() => saveSubscription(me.id, SubscriptionInput.parse(sub)));
+}
+
+export async function unsubscribePushAction(endpoint: string) {
+  const me = await requireUser();
+  return wrap(() => removeSubscription(me.id, z.string().max(1000).parse(endpoint)));
+}
+
+export async function notifyPrefsAction(hours: number[], partnerActivity: boolean) {
+  const me = await requireUser();
+  return wrap(async () => {
+    const prev = await getPrefs(me.id);
+    await savePrefs(me.id, { ...prev, hours: z.array(z.number().int().min(0).max(23)).max(24).parse(hours), partnerActivity: z.boolean().parse(partnerActivity) });
+  });
+}
+
+export async function testPushAction() {
+  const me = await requireUser();
+  return wrap(async () => {
+    const n = await sendToUser(me.id, { title: "¡Funciona!", body: "Así te avisaremos de tus misiones.", url: "/" });
+    if (n === 0) throw new GameError("No hay ningún dispositivo suscrito o faltan las claves VAPID en el servidor");
+    return n;
+  });
+}
+
+/* ---------- Atajo de pasos ---------- */
+
+export async function regenerateStepsTokenAction() {
+  const me = await requireUser();
+  return wrap(async () => {
+    const token = randomBytes(24).toString("base64url");
+    const db = await getDb();
+    await db.update(schema.users).set({ stepsToken: token }).where(eq(schema.users.id, me.id));
+    return token;
+  });
 }
