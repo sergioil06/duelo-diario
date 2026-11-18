@@ -10,7 +10,7 @@ Stack: Next.js 15 (App Router) + TypeScript + Tailwind 4 + Drizzle ORM sobre Pos
 | --- | --- | --- |
 | 1 | Diseño y mockups (dirección "Pop Caramelo") | Hecha |
 | 2 | Login, misiones, puntos, rachas, validación, pasos manuales | Hecha |
-| 3 | Clasificación, ganador semanal, insignias, estadísticas | Pendiente |
+| 3 | Clasificación, ganador semanal, apuesta por semana, 24 logros, estadísticas | Hecha |
 | 4 | Avatar 3D (React Three Fiber) y tienda | Pendiente |
 | 5 | Pulido, notificaciones push, PWA instalable, despliegue | Pendiente |
 
@@ -45,6 +45,15 @@ Cambiar una contraseña cierra la sesión de esa cuenta en todos los móviles. S
 - **Validación:** si una misión la tiene activada, queda "Por validar" y no suma hasta que la otra persona la apruebe.
 - **Retos semanales:** pagan todos sus puntos al completar las N veces de la semana (sin multiplicador).
 - **Medianoche:** todo se calcula con la fecha de Europe/Madrid, así que las misiones se reinician solas a las 00:00 sin tareas programadas.
+
+## Ranking y logros
+
+- Clasificación de hoy, semana, mes e histórico (solo cuentan misiones aprobadas).
+- Cada semana (lunes a domingo, hora de Madrid) se cierra sola: gana quien más puntos tenga; empate si igualan. La apuesta se guarda por semana desde Ajustes y aparece en el resultado.
+- 24 logros en bronce, plata, oro y diamante (misiones, rachas, puntos, semanas ganadas, días perfectos, retos, validaciones, categorías, pasos). Se calculan del historial, no hay que guardarlos. La lista está en `src/lib/domain/achievements.ts`.
+- Estadísticas: puntos por día, semana y mes, por categoría, e historial reciente.
+
+Para probar con datos inventados en local: `npm run demo` (se niega a correr si hay `DATABASE_URL`).
 
 ## Pasos (Apple Health / Google Fit)
 

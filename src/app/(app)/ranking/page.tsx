@@ -1,5 +1,10 @@
-import { ComingSoon } from "@/components/ComingSoon";
+import { requireUser } from "@/lib/auth/session";
+import { getLeaderboard } from "@/lib/leaderboard";
+import { Standings } from "./Standings";
 
-export default function RankingPage() {
-  return <ComingSoon title="Ranking" icon="trophy" phase={3} text="Clasificación diaria, semanal, mensual e histórica, ganador de la semana, insignias y estadísticas." />;
+export const dynamic = "force-dynamic";
+
+export default async function RankingPage() {
+  const me = await requireUser();
+  return <Standings data={await getLeaderboard(me)} />;
 }

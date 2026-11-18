@@ -125,7 +125,7 @@ export async function getDashboard(me: User, now = new Date()) {
     challenges,
     toValidate,
     stepsToday: stepsRow?.steps ?? 0,
-    bet: await getSetting<string>("bet", ""),
+    bet: await getSetting<string>(`bet:${weekStart(today)}`, ""),
   };
 }
 

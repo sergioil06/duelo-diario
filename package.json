@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "users": "tsx scripts/users.ts",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "demo": "tsx scripts/demo.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.16",

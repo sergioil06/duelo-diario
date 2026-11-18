@@ -26,6 +26,10 @@
   --warn-ink: #6b4a00;
   --danger: #dc2626;
   --shadow: #e4ddff;
+  /* Colores de gráficas, validados (CVD y contraste) sobre la superficie de cada modo. */
+  --chart-me: #2563eb;
+  --chart-rival: #ea580c;
+  --chart-grid: #ece7ff;
   color-scheme: light;
 }
 
@@ -50,6 +54,9 @@
   --warn-ink: #ffe3a3;
   --danger: #f87171;
   --shadow: #0b0918;
+  --chart-me: #3b82f6;
+  --chart-rival: #ea580c;
+  --chart-grid: #332c5c;
   color-scheme: dark;
 }
 
@@ -76,6 +83,9 @@
   --color-warn-ink: var(--warn-ink);
   --color-danger: var(--danger);
   --color-shadow: var(--shadow);
+  --color-chart-me: var(--chart-me);
+  --color-chart-rival: var(--chart-rival);
+  --color-chart-grid: var(--chart-grid);
   --font-sans: var(--font-nunito), system-ui, sans-serif;
   --font-display: var(--font-baloo), var(--font-nunito), system-ui, sans-serif;
 }

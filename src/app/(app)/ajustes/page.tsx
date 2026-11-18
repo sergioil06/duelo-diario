@@ -2,6 +2,7 @@ import { getDb, schema } from "@/lib/db";
 import { requireUser } from "@/lib/auth/session";
 import { logout } from "@/app/actions";
 import { getSetting } from "@/lib/game";
+import { localDate, weekStart } from "@/lib/domain/dates";
 import { Preferences } from "./Preferences";
 import { AccountForm } from "./AccountForm";
 import { BetForm } from "./BetForm";
@@ -12,7 +13,7 @@ export default async function SettingsPage() {
   const me = await requireUser();
   const db = await getDb();
   const accounts = me.role === "admin" ? await db.select().from(schema.users).orderBy(schema.users.createdAt) : [];
-  const bet = await getSetting<string>("bet", "");
+  const bet = await getSetting<string>(`bet:${weekStart(localDate())}`, "");
 
   return (
     <div className="mx-auto max-w-xl space-y-5">
@@ -25,7 +26,7 @@ export default async function SettingsPage() {
 
       <section className="press rounded-[28px] bg-surface p-5">
         <h2 className="font-display text-xl font-extrabold">Apuesta de la semana</h2>
-        <p className="mt-1 text-sm font-bold text-muted">Opcional. Sale en el marcador de los dos.</p>
+        <p className="mt-1 text-sm font-bold text-muted">Opcional. Sale en el marcador y en el resultado de la semana. Cada lunes empieza una nueva.</p>
         <BetForm initial={bet} />
       </section>
 

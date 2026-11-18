@@ -9,6 +9,7 @@ import { endSession, requireUser, startSession } from "@/lib/auth/session";
 import { getDb, schema } from "@/lib/db";
 import { completeMission, GameError, logSteps, setSetting, undoMission, validateCompletion } from "@/lib/game";
 import { ICON_KEYS } from "@/lib/icons";
+import { localDate, weekStart } from "@/lib/domain/dates";
 
 type Result<T = unknown> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -83,7 +84,7 @@ export async function stepsAction(steps: number) {
 
 export async function setBetAction(bet: string) {
   await requireUser();
-  return wrap(() => setSetting("bet", z.string().max(120).parse(bet.trim())));
+  return wrap(() => setSetting(`bet:${weekStart(localDate())}`, z.string().max(120).parse(bet.trim())));
 }
 
 /* ---------- Gestión de misiones ---------- */
