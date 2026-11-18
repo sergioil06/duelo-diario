@@ -36,6 +36,19 @@ const attempts = new Map<string, { n: number; until: number }>();
 let dummyHash: string | undefined;
 
 export async function login(_: unknown, form: FormData): Promise<{ error?: string }> {
+  try {
+    return await doLogin(form);
+  } catch (e) {
+    // redirect() lanza un error especial que hay que dejar pasar.
+    if (e && typeof e === "object" && "digest" in e && String((e as { digest: unknown }).digest).startsWith("NEXT_REDIRECT")) throw e;
+    console.error("login", e);
+    const msg = e instanceof Error ? e.message : "";
+    if (msg.includes("SESSION_SECRET")) return { error: "Falta configurar SESSION_SECRET en el servidor." };
+    return { error: "No se puede conectar con la base de datos. Revisa DATABASE_URL en Vercel y abre /api/health." };
+  }
+}
+
+async function doLogin(form: FormData): Promise<{ error?: string }> {
   const username = String(form.get("username") ?? "").trim().toLowerCase();
   const password = String(form.get("password") ?? "");
   const a = attempts.get(username);
