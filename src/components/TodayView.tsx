@@ -6,6 +6,7 @@ import { completeAction, stepsAction, undoAction, validateAction } from "@/app/a
 import type { Dashboard } from "@/lib/game";
 import { CATEGORY_COLORS, FALLBACK_TILE } from "@/lib/icons";
 import { Avatar2D, type Mood } from "./Avatar2D";
+import { Avatar } from "./avatar/Avatar";
 import { CoinIcon, FlameIcon, Icon } from "./Icon";
 import { celebrate } from "./celebrate";
 
@@ -32,6 +33,7 @@ export function TodayView({ data }: { data: Dashboard }) {
   useLiveRefresh();
   const [range, setRange] = useState<Range>("today");
   const [mood, setMood] = useState<Mood>("idle");
+  const [cheer, setCheer] = useState(0);
   const [toast, setToast] = useState<{ text: string; key: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -40,10 +42,10 @@ export function TodayView({ data }: { data: Dashboard }) {
   const { me, partner } = data;
 
   useEffect(() => {
-    if (mood !== "idle") return;
     const hour = Number(new Intl.DateTimeFormat("es-ES", { hour: "numeric", timeZone: "Europe/Madrid" }).format(new Date()));
-    if (me.dueToday > 0 && me.doneToday === 0 && hour >= 20) setMood("sad");
-  }, [me.dueToday, me.doneToday, mood]);
+    // Triste si a partir de las 20:00 aún no has hecho ninguna misión.
+    setMood(me.dueToday > 0 && me.doneToday === 0 && hour >= 20 ? "sad" : "idle");
+  }, [me.dueToday, me.doneToday]);
 
   const run = (id: string, fn: () => Promise<{ ok: boolean; error?: string; data?: unknown }>, onOk?: (d: unknown) => void) => {
     setBusy(id);
@@ -60,8 +62,7 @@ export function TodayView({ data }: { data: Dashboard }) {
     run(missionId, () => completeAction(missionId), (d) => {
       const { points, multiplier, pending } = d as { points: number; multiplier: number; pending: boolean };
       celebrate(origin);
-      setMood("happy");
-      setTimeout(() => setMood("idle"), 1900);
+      setCheer((c) => c + 1);
       const bonus = multiplier > 1 ? ` (x${multiplier} por racha)` : "";
       setToast({
         text: pending ? `+${points} cuando ${partner?.name ?? "tu pareja"} lo valide` : points > 0 ? `+${points} puntos${bonus}` : "¡Un paso más del reto!",
@@ -111,7 +112,17 @@ export function TodayView({ data }: { data: Dashboard }) {
           </div>
           <div className="mt-1 grid grid-cols-[1fr_auto_1fr] items-end">
             <div className="flex flex-col items-center">
-              <Avatar2D side="me" look={me.look} mood={mood} label={`Avatar de ${me.name}`} />
+              <Avatar
+                className="h-[136px] w-[120px]"
+                framing="compact"
+                interactive
+                appearance={data.avatars.me.appearance}
+                equipped={data.avatars.me.equipped}
+                mood={mood}
+                celebrate={cheer}
+                label={`Avatar 3D de ${me.name}. Arrastra para girarlo.`}
+                fallback={<Avatar2D side="me" look={me.look} mood={mood} label={`Avatar de ${me.name}`} />}
+              />
               <span className="text-sm font-extrabold">{me.name}</span>
             </div>
             <div className="flex flex-col items-center pb-3" aria-live="polite">
@@ -126,7 +137,19 @@ export function TodayView({ data }: { data: Dashboard }) {
               </span>
             </div>
             <div className="flex flex-col items-center">
-              <Avatar2D side="rival" look={partner?.look} label={`Avatar de ${partner?.name ?? "tu pareja"}`} />
+              {data.avatars.partner ? (
+                <Avatar
+                  className="h-[136px] w-[120px]"
+                  framing="compact"
+                  interactive
+                  appearance={data.avatars.partner.appearance}
+                  equipped={data.avatars.partner.equipped}
+                  label={`Avatar 3D de ${partner?.name ?? "tu pareja"}`}
+                  fallback={<Avatar2D side="rival" look={partner?.look} label={`Avatar de ${partner?.name ?? "tu pareja"}`} />}
+                />
+              ) : (
+                <Avatar2D side="rival" label="Sin rival" />
+              )}
               <span className="text-sm font-extrabold">{partner?.name ?? "—"}</span>
             </div>
           </div>
@@ -328,8 +351,7 @@ export function TodayView({ data }: { data: Dashboard }) {
               const done = (d as { completed: string[] }).completed;
               if (done.length && btn instanceof HTMLElement) {
                 celebrate(btn);
-                setMood("happy");
-                setTimeout(() => setMood("idle"), 1900);
+                setCheer((c) => c + 1);
                 setToast({ text: `¡${done[0]} completada!`, key: Date.now() });
               }
             });

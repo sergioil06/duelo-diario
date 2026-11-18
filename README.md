@@ -11,7 +11,7 @@ Stack: Next.js 15 (App Router) + TypeScript + Tailwind 4 + Drizzle ORM sobre Pos
 | 1 | Diseño y mockups (dirección "Pop Caramelo") | Hecha |
 | 2 | Login, misiones, puntos, rachas, validación, pasos manuales | Hecha |
 | 3 | Clasificación, ganador semanal, apuesta por semana, 24 logros, estadísticas | Hecha |
-| 4 | Avatar 3D (React Three Fiber) y tienda | Pendiente |
+| 4 | Avatar 3D personalizable, tienda con 32 objetos y rarezas, vestidor | Hecha |
 | 5 | Pulido, notificaciones push, PWA instalable, despliegue | Pendiente |
 
 ## Arrancar en local
@@ -54,6 +54,14 @@ Cambiar una contraseña cierra la sesión de esa cuenta en todos los móviles. S
 - Estadísticas: puntos por día, semana y mes, por categoría, e historial reciente.
 
 Para probar con datos inventados en local: `npm run demo` (se niega a correr si hay `DATABASE_URL`).
+
+## Avatar 3D y tienda
+
+- Muñeco chibi en 3D (Three.js con React Three Fiber) hecho solo con formas básicas: sin modelos externos ni licencias de terceros, y pesa poco. Se gira arrastrando, respira y parpadea, salta y gira al completar una misión, y se pone triste si a las 20:00 no has hecho nada.
+- **Vestidor → Aspecto** (gratis): piel, peinado, color de pelo, ojos y camiseta básica.
+- **Tienda:** 32 objetos en 7 huecos (sombreros, gafas, ropa, mascotas, escenarios, poses, efectos) con rareza común (60), rara (180), épica (450) y legendaria (1.200). Puedes probártelos antes de comprar.
+- Comprar gasta monedas, nunca puntos de ranking. El catálogo está en `src/lib/domain/shop.ts`: para añadir un objeto basta con una línea nueva.
+- Si un móvil no tiene WebGL, se muestra el muñeco 2D.
 
 ## Pasos (Apple Health / Google Fit)
 

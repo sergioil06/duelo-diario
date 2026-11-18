@@ -6,10 +6,12 @@ import { localDate, monthStart, weekStart } from "@/lib/domain/dates";
 import { canComplete, missionsForDay, type MissionDef } from "@/lib/domain/missions";
 import { awardFor, rankingPoints, coinBalance, type LedgerCompletion } from "@/lib/domain/points";
 import { currentStreak, nextTier, streakMultiplier } from "@/lib/domain/streak";
+import { getAvatar } from "@/lib/shop-server";
 
-const { users, missions, completions, stepLogs, settings } = schema;
+const { users, missions, completions, stepLogs, settings, purchases } = schema;
 
-export class GameError extends Error {}
+import { GameError } from "@/lib/errors";
+export { GameError };
 
 function toDef(m: typeof missions.$inferSelect): MissionDef {
   return { ...m, kind: m.kind as MissionDef["kind"] };
@@ -61,10 +63,12 @@ export async function getDashboard(me: User, now = new Date()) {
   const db = await getDb();
   const today = localDate(now);
   const partner = await getPartner(me.id);
-  const [allMissions, allCompletions] = await Promise.all([
+  const [allMissions, allCompletions, allPurchases] = await Promise.all([
     db.select().from(missions).orderBy(missions.createdAt),
     db.select().from(completions),
+    db.select().from(purchases),
   ]);
+  const spends = allPurchases.map((p) => ({ userId: p.userId, coins: p.price }));
   const defs = allMissions.map(toDef);
   const ledger: LedgerCompletion[] = allCompletions;
   const wk = weekStart(today);
@@ -83,7 +87,7 @@ export async function getDashboard(me: User, now = new Date()) {
       total: rankingPoints(ledger, u.id),
       streak,
       multiplier: streakMultiplier(streak),
-      coins: coinBalance(ledger, [], u.id),
+      coins: coinBalance(ledger, spends, u.id),
       doneToday: states.filter((s) => s.today === "approved" || s.today === "pending").length,
       dueToday: states.length,
     };
@@ -118,6 +122,7 @@ export async function getDashboard(me: User, now = new Date()) {
   const meSummary = await summarize(me);
   return {
     today,
+    avatars: { me: await getAvatar(me), partner: partner ? await getAvatar(partner) : null },
     me: meSummary,
     partner: partner ? await summarize(partner) : null,
     nextTier: nextTier(meSummary.streak),

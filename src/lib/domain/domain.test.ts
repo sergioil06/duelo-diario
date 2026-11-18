@@ -124,6 +124,14 @@ describe("misiones del día", () => {
     const pending = missionsForDay([base], [{ missionId: "m1", userId: "a", date: today, status: "pending" }], "a", today);
     expect(canComplete(pending[0])).toBe(false);
   });
+  it("una diaria hecha ayer se puede volver a hacer hoy (reinicio a medianoche)", () => {
+    const s = missionsForDay([base], [{ missionId: "m1", userId: "a", date: "2026-11-17", status: "approved" }], "a", today);
+    expect(s[0].today).toBeNull();
+    expect(canComplete(s[0])).toBe(true);
+    const wd = { ...base, frequency: { type: "weekdays", days: [1, 3] } as const };
+    const s2 = missionsForDay([wd], [{ missionId: "m1", userId: "a", date: "2026-11-16", status: "approved" }], "a", today);
+    expect(canComplete(s2[0])).toBe(true);
+  });
   it("lo que hizo la pareja no cuenta como mío", () => {
     const s = missionsForDay([base], [{ missionId: "m1", userId: "b", date: today, status: "approved" }], "a", today);
     expect(s[0].today).toBeNull();

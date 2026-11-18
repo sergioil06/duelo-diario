@@ -9,6 +9,7 @@ import { endSession, requireUser, startSession } from "@/lib/auth/session";
 import { getDb, schema } from "@/lib/db";
 import { completeMission, GameError, logSteps, setSetting, undoMission, validateCompletion } from "@/lib/game";
 import { ICON_KEYS } from "@/lib/icons";
+import { buyItem, equipItem, updateAppearance } from "@/lib/shop-server";
 import { localDate, weekStart } from "@/lib/domain/dates";
 
 type Result<T = unknown> = { ok: true; data: T } | { ok: false; error: string };
@@ -213,4 +214,23 @@ export async function saveAccountAction(_: unknown, form: FormData): Promise<{ e
   if (v.data.password && u.id === me.id) await startSession({ id: u.id, sessionVersion: u.sessionVersion + 1 });
   revalidatePath("/ajustes");
   return { ok: true };
+}
+
+/* ---------- Tienda y vestidor ---------- */
+
+const SlotEnum = z.enum(["hat", "glasses", "outfit", "pet", "background", "pose", "effect"]);
+
+export async function buyAction(itemId: string) {
+  const me = await requireUser();
+  return wrap(() => buyItem(me, z.string().max(60).parse(itemId)));
+}
+
+export async function equipAction(slot: string, itemId: string | null) {
+  const me = await requireUser();
+  return wrap(() => equipItem(me, SlotEnum.parse(slot), itemId === null ? null : z.string().max(60).parse(itemId)));
+}
+
+export async function appearanceAction(input: Record<string, string>) {
+  const me = await requireUser();
+  return wrap(() => updateAppearance(me, z.record(z.string(), z.string().max(40)).parse(input)));
 }

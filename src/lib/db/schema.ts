@@ -76,3 +76,28 @@ export const settings = pgTable("settings", {
 export type User = typeof users.$inferSelect;
 export type Mission = typeof missions.$inferSelect;
 export type Completion = typeof completions.$inferSelect;
+
+/** Compras de la tienda: restan monedas, nunca puntos de ranking. */
+export const purchases = pgTable(
+  "purchases",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    itemId: text("item_id").notNull(),
+    price: integer("price").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("purchases_user_item").on(t.userId, t.itemId)],
+);
+
+/** Apariencia y objetos equipados de cada avatar. */
+export const avatars = pgTable("avatars", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id),
+  appearance: jsonb("appearance").$type<import("@/lib/domain/shop").Appearance>().notNull(),
+  equipped: jsonb("equipped").$type<import("@/lib/domain/shop").Equipped>().notNull().default({}),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});

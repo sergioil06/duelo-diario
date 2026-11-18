@@ -1,5 +1,10 @@
-import { ComingSoon } from "@/components/ComingSoon";
+import { requireUser } from "@/lib/auth/session";
+import { getShop } from "@/lib/shop-server";
+import { ShopView } from "./ShopView";
 
-export default function ShopPage() {
-  return <ComingSoon title="Tienda" icon="bag" phase={4} text="Accesorios para tu avatar 3D con rarezas. Tus monedas ya se están guardando." />;
+export const dynamic = "force-dynamic";
+
+export default async function ShopPage() {
+  const me = await requireUser();
+  return <ShopView data={await getShop(me)} name={me.displayName} />;
 }

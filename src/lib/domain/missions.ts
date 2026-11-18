@@ -99,5 +99,7 @@ export function missionsForDay(
 /** Puede completarse hoy: no hecha hoy (o rechazada) y no superado el cupo semanal. */
 export function canComplete(state: MissionDayState): boolean {
   if (state.today === "approved" || state.today === "pending") return false;
+  // El cupo semanal solo limita a las misiones "N veces por semana".
+  if (state.mission.frequency.type !== "weekly") return true;
   return state.weekCount < state.weekTarget;
 }
